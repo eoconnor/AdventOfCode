@@ -3,46 +3,39 @@ package com.eric.adventofcode.twentythree
 import java.io.File
 
 fun main() {
-    DayTwoPuzzleOne().play()
+    DayTwoPuzzleTwo().play()
 }
 
-class DayTwoPuzzleOne {
+class DayTwoPuzzleTwo {
     private val inputDataFilePath = "/Users/ericoconnor/src/AdventOfCode/src/main/resources/adventofcode/Day2Puzzle1Input.txt"
 
     fun play() {
-        val numRedCubes = 12
-        val numGreenCubes = 13
-        val numBlueCubes = 14
-        var gameIdSum = 0
+        var powerSum = 0
 
         val inputDataFile = File(inputDataFilePath)
-        inputDataFile.forEachLine { game ->
-            val gameNumber = getGameNumber(game)
-            val gameResults = getGameResults(game)
-            gameResults.forEach { result ->
-                if (getColorCount("red", result) > numRedCubes ||
-                    getColorCount("green", result) > numGreenCubes ||
-                    getColorCount("blue", result) > numBlueCubes
-                ) {
-                    // This game is not possible
-                    println("Game $gameNumber IS NOT possible")
-                    return@forEachLine
-                }
+        inputDataFile.forEachLine { line ->
+            val gameResults = getGameResults(line)
+
+            // Get the largest number of cubes for each color across all game results
+            var maxNumberRed = 0
+            var maxNumberGreen = 0
+            var maxNumberBlue = 0
+            gameResults.forEach {  result ->
+                val redCount = getColorCount("red", result)
+                if (redCount > maxNumberRed) maxNumberRed = redCount
+                val greenCount = getColorCount("green", result)
+                if (greenCount > maxNumberGreen) maxNumberGreen = greenCount
+                val blueCount = getColorCount("blue", result)
+                if (blueCount > maxNumberBlue) maxNumberBlue = blueCount
             }
 
-            println("Game $gameNumber IS possible")
-            gameIdSum += gameNumber
+            val power = calculatePower(maxNumberRed, maxNumberGreen, maxNumberBlue)
+            println("Power for game ${getGameNumber(line)} = $power")
+
+            powerSum += power
         }
 
-        println("Result = $gameIdSum")
-    }
-
-    /**
-     * Given a string that starts with "Game xx: ...", return the number represented by xx
-     */
-    private fun getGameNumber(line: String): Int {
-        val numberStr = line.substring(5, line.indexOf(":"))
-        return numberStr.toInt()
+        println("Sum of powers is $powerSum")
     }
 
     /**
@@ -109,4 +102,26 @@ class DayTwoPuzzleOne {
      */
     private fun getColorCount(color: String, colorCountMap: Map<String, Int>): Int {
         return colorCountMap[color] ?: 0
-    }}
+    }
+
+    private fun calculatePower(numRedCubes: Int, numGreenCubes: Int, numBlueCubes: Int): Int {
+        val nonZeroNumbers = mutableListOf<Int>()
+
+        // This may not be necessary, but if any of the counts is 0, the whole result
+        // will be 0, which I don't think is what we want?
+        if (numRedCubes > 0) nonZeroNumbers.add(numRedCubes)
+        if (numGreenCubes > 0) nonZeroNumbers.add(numGreenCubes)
+        if (numBlueCubes > 0) nonZeroNumbers.add(numBlueCubes)
+
+        return nonZeroNumbers.reduce { acc, count -> acc * count }
+    }
+
+    /**
+     * Given a string that starts with "Game xx: ...", return the number represented by xx
+     */
+    private fun getGameNumber(line: String): Int {
+        val numberStr = line.substring(5, line.indexOf(":"))
+        return numberStr.toInt()
+    }
+
+}
